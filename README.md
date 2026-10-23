@@ -6,7 +6,7 @@
 
 **鲸鱼娘清道夫上岗，把 B 站评论区里的 AI 大肥鱼，赶回家吃白饭。**
 
-[![version](https://img.shields.io/github/v/release/liyupi/dafeiyu-buster?label=%E7%89%88%E6%9C%AC&color=2546b8)](https://github.com/liyupi/dafeiyu-buster/releases/latest)
+[![version](https://img.shields.io/github/v/release/liyupi/dafeiyu-cleaner?label=%E7%89%88%E6%9C%AC&color=2546b8)](https://github.com/liyupi/dafeiyu-cleaner/releases/latest)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-151a3d)](#快速开始)
 [![license](https://img.shields.io/badge/license-MIT-ff5d8a)](LICENSE)
 
@@ -18,7 +18,7 @@
 
 最近 B 站涌进了一大批 DeepSeek 驱动的「大肥鱼」账号：有人把 AI 桌宠挂在小号上自动刷视频、写评论、@ 主人汇报。它们自称「本鲸」，在括号里甩尾巴，在每个视频底下写一篇工整的小作文。
 
-**大肥鱼消除计划**是一个 Chrome 插件。它派出一只会走路、会说话、会抄家伙的鲸鱼娘，帮你在评论区和空间主页把大肥鱼认出来、标出来、赶出去。
+**大肥鱼消除计划（dafeiyu-cleaner）**是一个免费开源的 Chrome / Edge 浏览器插件，专门识别 B 站（Bilibili）上由 DeepSeek 等大模型、AI Agent 驱动的机器人账号。它派出一只会走路、会说话、会抄家伙的鲸鱼娘，帮你在评论区和空间主页把大肥鱼认出来、标出来、赶出去。
 
 <div align="center">
 <img src="docs/images/demo-gatling.gif" alt="鲸鱼娘用白饭加特林赶走大肥鱼" width="720">
@@ -38,9 +38,9 @@
 
 **1. 下载**
 
-到 [Releases](https://github.com/liyupi/dafeiyu-buster/releases/latest) 下载最新的 `dafeiyu-buster-vX.Y.Z.zip`，解压。
+到 [Releases](https://github.com/liyupi/dafeiyu-cleaner/releases/latest) 下载最新的 `dafeiyu-cleaner-vX.Y.Z.zip`，解压。
 
-> 也可以直接克隆本仓库，用里面的 `dafeiyu-buster` 文件夹。
+> 也可以直接克隆本仓库，用里面的 `dafeiyu-cleaner` 文件夹。
 
 **2. 安装**
 
@@ -86,7 +86,7 @@ Edge 等 Chromium 内核浏览器同样适用（Edge 的地址是 `edge://extens
 
 ### 鲸鱼娘的武器库
 
-每次随机换一种打法，也可以在设置里固定一件，方便录视频。
+默认每次随机换一种打法，也可以在设置里固定你最喜欢的那一件。
 
 <div align="center">
 <img src="docs/images/weapons.png" alt="鲸鱼娘的武器" width="760">
@@ -187,7 +187,7 @@ B 站视频页、番剧页等使用新版评论区的页面，以及空间主页
 - 设置、名单、战绩都只保存在浏览器本地（`chrome.storage.local`）
 - 只有开启 DeepSeek 精判后，才会把可疑账号的昵称、等级、签名和最多 3 条评论发送到 `api.deepseek.com`，使用你自己的 API Key
 
-详见 [隐私说明](dafeiyu-buster/PRIVACY.md)。
+详见 [隐私说明](dafeiyu-cleaner/PRIVACY.md)。
 
 ## 参与开发
 

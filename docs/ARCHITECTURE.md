@@ -1,11 +1,11 @@
 # 架构说明
 
-插件是 Chrome MV3 扩展，纯原生 JavaScript，没有构建步骤。插件本体在 `dafeiyu-buster/`，加载这个文件夹即可调试。
+插件是 Chrome MV3 扩展，纯原生 JavaScript，没有构建步骤。插件本体在 `dafeiyu-cleaner/`，加载这个文件夹即可调试。
 
 ## 目录
 
 ```
-dafeiyu-buster/
+dafeiyu-cleaner/
 ├── manifest.json
 ├── src/
 │   ├── main-world.js   页面主世界：读取评论组件上的数据，postMessage 给插件

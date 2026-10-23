@@ -362,7 +362,7 @@
 
   /* ---------- 名单导入 / 导出（可以和朋友分享大肥鱼名单） ---------- */
   $('io-export').onclick = () => {
-    const data = { app: 'dafeiyu-buster', v: 1, exported: new Date().toISOString(), blocklist: S.blocklist, whitelist: S.whitelist };
+    const data = { app: 'dafeiyu-cleaner', v: 1, exported: new Date().toISOString(), blocklist: S.blocklist, whitelist: S.whitelist };
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url;
