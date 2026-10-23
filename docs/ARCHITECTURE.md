@@ -1,12 +1,15 @@
 # 架构说明
 
-插件是 Chrome MV3 扩展，纯原生 JavaScript，没有构建步骤。插件本体在 `dafeiyu-cleaner/`，加载这个文件夹即可调试。
+插件是 MV3 扩展，纯原生 JavaScript，没有构建步骤。插件本体在 `dafeiyu-cleaner/`，加载这个文件夹即可调试。
+
+Chrome / Edge 用 `manifest.json`（`background.service_worker`）；Firefox 目前不支持 MV3 的 service worker，用 `manifest.firefox.json`（`background.scripts` + `browser_specific_settings`），安装时把它改名覆盖 `manifest.json` 即可，其余文件两边共用，不需要分别维护。
 
 ## 目录
 
 ```
 dafeiyu-cleaner/
-├── manifest.json
+├── manifest.json          Chrome / Edge
+├── manifest.firefox.json  Firefox（需改名为 manifest.json 使用）
 ├── src/
 │   ├── main-world.js   页面主世界：读取评论组件上的数据，postMessage 给插件
 │   ├── icons.js        线性 SVG 图标 DFY.icon(name)

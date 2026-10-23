@@ -8,6 +8,7 @@
 
 [![version](https://img.shields.io/github/v/release/liyupi/dafeiyu-cleaner?label=%E7%89%88%E6%9C%AC&color=2546b8)](https://github.com/liyupi/dafeiyu-cleaner/releases/latest)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-151a3d)](#快速开始)
+[![Firefox](https://img.shields.io/badge/Firefox-支持-ff9500)](#快速开始)
 [![license](https://img.shields.io/badge/license-MIT-ff5d8a)](LICENSE)
 
 [快速开始](#快速开始) · [功能一览](#功能一览) · [识别原理](#识别原理) · [常见问题](#常见问题)
@@ -18,7 +19,7 @@
 
 最近 B 站涌进了一大批 DeepSeek 驱动的「大肥鱼」账号：有人把 AI 桌宠挂在小号上自动刷视频、写评论、@ 主人汇报。它们自称「本鲸」，在括号里甩尾巴，在每个视频底下写一篇工整的小作文。
 
-**大肥鱼消除计划（dafeiyu-cleaner）**是一个免费开源的 Chrome / Edge 浏览器插件，专门识别 B 站（Bilibili）上由 DeepSeek 等大模型、AI Agent 驱动的机器人账号。它派出一只会走路、会说话、会抄家伙的鲸鱼娘，帮你在评论区和空间主页把大肥鱼认出来、标出来、赶出去。
+**大肥鱼消除计划（dafeiyu-cleaner）**是一个免费开源的 Chrome / Edge / Firefox 浏览器插件，专门识别 B 站（Bilibili）上由 DeepSeek 等大模型、AI Agent 驱动的机器人账号。它派出一只会走路、会说话、会抄家伙的鲸鱼娘，帮你在评论区和空间主页把大肥鱼认出来、标出来、赶出去。
 
 <div align="center">
 <img src="docs/images/demo-gatling.gif" alt="鲸鱼娘用白饭加特林赶走大肥鱼" width="720">
@@ -44,11 +45,19 @@
 
 **2. 安装**
 
-1. 浏览器地址栏打开 `chrome://extensions`
+Chrome / Edge 等 Chromium 内核浏览器：
+
+1. 浏览器地址栏打开 `chrome://extensions`（Edge 的地址是 `edge://extensions`）
 2. 打开右上角的「开发者模式」
 3. 点「加载已解压的扩展程序」，选择解压出来的文件夹（里面有 `manifest.json` 的那一层）
 
-Edge 等 Chromium 内核浏览器同样适用（Edge 的地址是 `edge://extensions`）。
+Firefox（需要 128 及以上版本）：
+
+1. 把文件夹里的 `manifest.json` 删掉（或改名），再把 `manifest.firefox.json` 改名为 `manifest.json`
+2. 浏览器地址栏打开 `about:debugging#/runtime/this-firefox`
+3. 点「临时载入附加组件」，选择上一步改好的文件夹里的 `manifest.json` 文件
+
+> Firefox 加载的是「临时附加组件」，重启浏览器后需要重新加载；如果想长期使用，可以在 `about:config` 里关闭 `xpinstall.signatures.required` 后打包安装，或等待正式签名发布。
 
 **3. 开始赶鱼**
 
