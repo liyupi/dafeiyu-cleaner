@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>大肥鱼消除计划</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<main class="app">
+  <header class="hero">
+    <div class="hero-bg"></div>
+    <div class="whale" id="whale" title="戳戳我"></div>
+    <div class="hero-txt">
+      <div class="tape">WHALE-CHAN SWEEPER</div>
+      <h1>大肥鱼消除计划</h1>
+      <div class="say" id="say">咕噜~</div>
+    </div>
+    <label class="power" title="总开关"><input type="checkbox" id="enabled"><span><b class="on">巡逻中</b><b class="off">已下班</b></span></label>
+  </header>
+
+  <section class="stats">
+    <div class="hot"><b id="s-today">0</b><span>今日赶走</span></div>
+    <div><b id="s-total">0</b><span>累计赶走</span></div>
+    <div><b id="s-chars">0</b><span>少看 AI 字</span></div>
+  </section>
+
+  <section class="here" id="here">
+    <div class="here-txt"><b id="here-t">本页</b><span id="here-s">正在问本鲸……</span></div>
+    <div class="here-btns" id="here-btns"></div>
+  </section>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="detect">识别</button>
+    <button data-tab="ds">DeepSeek</button>
+    <button data-tab="lists">名单</button>
+    <button data-tab="look">形象</button>
+  </nav>
+
+  <section class="panel" data-panel="detect">
+    <div class="field-h">发现大肥鱼后</div>
+    <div class="seg" id="mode">
+      <button data-v="mark">只标记</button>
+      <button data-v="fold">装进白饭碗</button>
+      <button data-v="auto">自动清场</button>
+    </div>
+    <p class="hint" id="mode-hint"></p>
+    <div class="field-h">鉴定严格度 <em id="th-val">60</em></div>
+    <div class="slider"><span>宽松</span><input type="range" id="threshold" min="45" max="80" step="5"><span>严格</span></div>
+    <p class="hint" id="th-hint"></p>
+    <div class="field-h">赶走时用的武器</div>
+    <div class="seg wpn" id="weapon">
+      <button data-v="random">随机</button>
+      <button data-v="slap">巴掌</button>
+      <button data-v="gatling">加特林</button>
+      <button data-v="broom">扫帚</button>
+      <button data-v="sock">臭袜子</button>
+      <button data-v="rice">扔白饭</button>
+    </div>
+    <p class="hint" id="wpn-hint"></p>
+    <div class="row"><span class="lbl" data-ic="whale">页面上显示鲸鱼娘</span><label class="switch"><input type="checkbox" id="showMascot"><span></span></label></div>
+    <div class="row"><span class="lbl" data-ic="volume">咕噜音效</span><label class="switch"><input type="checkbox" id="sound"><span></span></label></div>
+    <div class="row"><span class="lbl" data-ic="report">前科记忆 <em class="mini" id="seen-n">0</em></span><button class="link" id="seen-clear">清空</button></div>
+    <p class="hint small">同一账号在多个视频下都被认出是大肥鱼，以后见到会直接加分。只存在本机。</p>
+    <p class="hint small keys">快捷键：<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> 响指清场，<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> 泡泡大炮</p>
+  </section>
+
+  <section class="panel ds" data-panel="ds">
+    <div class="row first"><span class="lbl" data-ic="brain">开启 DeepSeek 精判</span><label class="switch"><input type="checkbox" id="llmEnabled"><span></span></label></div>
+    <p class="hint">拿不准的账号交给 DeepSeek 再判一次。</p>
+    <div id="ds-body">
+      <div class="keybox"><input type="password" id="llmKey" placeholder="API Key：sk-..." autocomplete="off" spellcheck="false"><button id="eye" class="icon-btn" title="显示 / 隐藏"></button></div>
+      <select id="llmModel">
+        <option value="deepseek-flash">deepseek-flash · 快，能看头像</option>
+        <option value="deepseek-v4-pro">deepseek-v4-pro · 更准，更贵</option>
+      </select>
+      <div class="row"><span class="lbl" data-ic="bolt">自动精判可疑账号</span><label class="switch"><input type="checkbox" id="llmAuto"><span></span></label></div>
+      <div class="row"><span class="lbl" data-ic="eye">空间鉴定时看头像</span><label class="switch"><input type="checkbox" id="llmVision"><span></span></label></div>
+      <div class="test"><button class="btn" id="test">测试连接</button><span id="test-res"></span></div>
+      <p class="hint small lock">密钥只保存在本机，只会发送到 api.deepseek.com。<a href="https://platform.deepseek.com/api_keys" target="_blank">申请密钥</a></p>
+    </div>
+  </section>
+
+  <section class="panel" data-panel="lists">
+    <div class="field-h">遣返名单 <em id="bl-n">0</em><button class="link" id="bl-clear">全部放回</button></div>
+    <div class="list-tools"><input type="text" id="bl-q" placeholder="搜昵称或 UID" autocomplete="off" spellcheck="false"><button class="btn ghost sm" id="io-export" title="导出遣返名单和白名单（JSON）">导出</button><label class="btn ghost sm" title="导入别人分享的名单，和现有名单合并">导入<input type="file" id="io-import" accept="application/json,.json" hidden></label></div>
+    <ul class="list" id="bl"></ul>
+    <div class="field-h">人类白名单 <em id="wl-n">0</em><button class="link" id="wl-clear">清空</button></div>
+    <ul class="list short" id="wl"></ul>
+  </section>
+
+  <section class="panel" data-panel="look">
+    <div class="custom">
+      <div class="preview" id="cm-preview"></div>
+      <div>
+        <p class="hint">默认是原创矢量鲸鱼娘。也可以换成你自己有权使用的立绘（透明背景 PNG 最好，3MB 以内），只保存在本机。</p>
+        <div class="custom-btns">
+          <label class="btn" id="cm-upload"><input type="file" id="cm-file" accept="image/png,image/webp,image/gif,image/jpeg" hidden>上传立绘</label>
+          <button class="btn ghost" id="cm-reset">恢复默认</button>
+        </div>
+      </div>
+    </div>
+    <div class="field-h dex-h">大肥鱼图鉴 <em>8</em><span class="dex-sub">点一下听它狡辩</span></div>
+    <div class="dex" id="dex"></div>
+    <div class="field-h dex-h">鲸鱼娘武器库 <em>4</em><span class="dex-sub">点一下试试手感</span></div>
+    <div class="dex" id="armory"></div>
+  </section>
+
+  <footer>非 DeepSeek 官方产品 · 数据只存本机 · 不读 Cookie</footer>
+</main>
+<script src="../src/icons.js"></script>
+<script src="../src/mascot.js"></script>
+<script src="../src/memes.js"></script>
+<script src="../src/storage.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>
