@@ -250,42 +250,53 @@
 
   /* ---------- 头像颜色分析（鲸鱼娘 = 大面积深浅蓝） ---------- */
   const avatarCache = new Map();
+  function blueRatio(pic) {
+    try {
+      const c = document.createElement('canvas');
+      c.width = c.height = 32;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(pic, 0, 0, 32, 32);
+      const d = g.getImageData(0, 0, 32, 32).data;
+      let blue = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i] / 255, gg = d[i + 1] / 255, b = d[i + 2] / 255;
+        const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), v = mx, s = mx ? (mx - mn) / mx : 0;
+        if (s <= 0.35 || v <= 0.18 || mx !== b) continue;
+        let h = mx === mn ? 0 : 60 * (4 + (r - gg) / (mx - mn));
+        if (h < 0) h += 360;
+        if (h >= 205 && h <= 250) blue++;
+      }
+      return blue / 1024;
+    } catch (e) {
+      return null;
+    }
+  }
+  // Firefox 内容脚本里 crossOrigin 图片请求带不上 Origin 头，会被 CORS 拦下；fetch 不受影响
+  const viaFetch = typeof window !== 'undefined' && typeof window.wrappedJSObject === 'object';
   DFY.avatarBlue = function (url) {
     if (!url) return Promise.resolve(null);
     const key = url.split('@')[0];
     if (avatarCache.has(key)) return avatarCache.get(key);
+    const src = key.replace(/^http:/, 'https:') + '@48w_48h.png';
     const p = new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(null), 6000);
+      const done = (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      };
+      if (viaFetch) {
+        fetch(src, { referrerPolicy: 'no-referrer' })
+          .then((r) => (r.ok ? r.blob() : Promise.reject()))
+          .then((b) => createImageBitmap(b))
+          .then((bmp) => done(blueRatio(bmp)), () => done(null));
+        return;
+      }
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.referrerPolicy = 'no-referrer';
-      const timer = setTimeout(() => resolve(null), 6000);
-      img.onload = () => {
-        clearTimeout(timer);
-        try {
-          const c = document.createElement('canvas');
-          c.width = c.height = 32;
-          const g = c.getContext('2d', { willReadFrequently: true });
-          g.drawImage(img, 0, 0, 32, 32);
-          const d = g.getImageData(0, 0, 32, 32).data;
-          let blue = 0;
-          for (let i = 0; i < d.length; i += 4) {
-            const r = d[i] / 255, gg = d[i + 1] / 255, b = d[i + 2] / 255;
-            const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), v = mx, s = mx ? (mx - mn) / mx : 0;
-            if (s <= 0.35 || v <= 0.18 || mx !== b) continue;
-            let h = mx === mn ? 0 : 60 * (4 + (r - gg) / (mx - mn));
-            if (h < 0) h += 360;
-            if (h >= 205 && h <= 250) blue++;
-          }
-          resolve(blue / 1024);
-        } catch (e) {
-          resolve(null);
-        }
-      };
-      img.onerror = () => {
-        clearTimeout(timer);
-        resolve(null);
-      };
-      img.src = key.replace(/^http:/, 'https:') + '@48w_48h.png';
+      img.onload = () => done(blueRatio(img));
+      img.onerror = () => done(null);
+      img.src = src;
     });
     avatarCache.set(key, p);
     return p;

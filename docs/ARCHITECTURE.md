@@ -1,6 +1,6 @@
 # 架构说明
 
-插件是 Chrome MV3 扩展，纯原生 JavaScript，没有构建步骤。插件本体在 `dafeiyu-cleaner/`，加载这个文件夹即可调试。
+插件是 Chrome MV3 扩展，纯原生 JavaScript，没有构建步骤。插件本体在 `dafeiyu-cleaner/`，加载这个文件夹即可调试。Firefox 版共用全部代码，只换一份 manifest，见文末「Firefox 适配」。
 
 ## 目录
 
@@ -21,7 +21,7 @@ dafeiyu-cleaner/
 │   ├── comments.js     评论区：标记、靶心、赶走、折叠、响指清场、战报、DeepSeek 精判
 │   ├── space.js        空间主页鉴定报告与页面效果
 │   ├── content.js      入口：读设置、挂载 UI、菜单、消息与路由监听
-│   └── background.js   Service Worker：DeepSeek 请求、快捷键
+│   └── background.js   后台（Chrome 是 Service Worker，Firefox 是事件页）：DeepSeek 请求、快捷键
 ├── popup/              工具栏面板，同时作为设置页
 ├── assets/
 │   ├── dfy-display.woff2   标题字体（得意黑子集）
@@ -149,6 +149,36 @@ B 站改版时最先坏的就是这里，相关查询集中在 `comments.js` 的
 | 内容脚本 → 主世界 | `{source: 'dfy-iso', type: 'rescan'}` | 要求重新扫描 |
 | 内容脚本 → 后台 | `llm-judge` / `llm-space` / `llm-test` / `open-options` | DeepSeek 请求、打开设置 |
 | 面板 / 后台 → 内容脚本 | `{dfy: 'status' \| 'snap' \| 'cannon' \| 'rescan' \| 'llm' \| 'report'}` | 面板「本页」操作与快捷键 |
+
+## Firefox 适配
+
+代码里统一使用 `chrome.*` 回调写法，Firefox 原生支持，不需要 polyfill。Firefox 版只是把 `manifest.json` 换成下面的写法（其余字段相同），打包成 zip：
+
+```json
+{
+  "background": { "scripts": ["src/background.js"] },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "dafeiyu-cleaner@liyupi.github.io",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"], "optional": ["websiteContent"] }
+    },
+    "gecko_android": { "strict_min_version": "142.0" }
+  }
+}
+```
+
+- Firefox MV3 不支持 `background.service_worker`，改用 `background.scripts`（事件页）
+- 内容脚本的 `world: "MAIN"` 需要 Firefox 128+，`data_collection_permissions` 需要 140+
+- 扩展 ID 发布后不能再改
+- 不直接改 Chrome 版的 manifest，避免 Chrome 报「无法识别的键」警告
+
+代码里只有两处 Firefox 专属分支，Chrome 下都不会进入：
+
+| 位置 | 原因 |
+| --- | --- |
+| `detector.js` 的 `DFY.avatarBlue` | Firefox 内容脚本里带 `crossOrigin` 的图片请求加不上 `Origin` 头，会被 CORS 拦下；改用 `fetch` 取图再 `createImageBitmap`。用 `window.wrappedJSObject` 是否存在判断 |
+| `popup.js` 的精判开关、`background.js` 的 `consented()` | 把评论发给 DeepSeek 属于向第三方发送网页内容，Firefox 要求运行时取得 `websiteContent` 授权。打开开关时 `permissions.request`，发请求前 `permissions.contains` 检查。用扩展地址是否以 `moz-extension:` 开头判断 |
 
 ## 约定
 

@@ -8,9 +8,10 @@
 
 [![version](https://img.shields.io/github/v/release/liyupi/dafeiyu-cleaner?label=%E7%89%88%E6%9C%AC&color=2546b8)](https://github.com/liyupi/dafeiyu-cleaner/releases/latest)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-MV3-151a3d)](#快速开始)
+[![Firefox 140+](https://img.shields.io/badge/Firefox-140%2B-c9a24a)](#firefox)
 [![license](https://img.shields.io/badge/license-MIT-ff5d8a)](LICENSE)
 
-[快速开始](#快速开始) · [功能一览](#功能一览) · [识别原理](#识别原理) · [常见问题](#常见问题)
+[演示视频](#演示视频) · [快速开始](#快速开始) · [功能一览](#功能一览) · [识别原理](#识别原理) · [常见问题](#常见问题)
 
 </div>
 
@@ -18,7 +19,7 @@
 
 最近 B 站涌进了一大批 DeepSeek 驱动的「大肥鱼」账号：有人把 AI 桌宠挂在小号上自动刷视频、写评论、@ 主人汇报。它们自称「本鲸」，在括号里甩尾巴，在每个视频底下写一篇工整的小作文。
 
-**大肥鱼消除计划（dafeiyu-cleaner）**是一个免费开源的 Chrome / Edge 浏览器插件，专门识别 B 站（Bilibili）上由 DeepSeek 等大模型、AI Agent 驱动的机器人账号。它派出一只会走路、会说话、会抄家伙的鲸鱼娘，帮你在评论区和空间主页把大肥鱼认出来、标出来、赶出去。
+**大肥鱼消除计划（dafeiyu-cleaner）**是一个免费开源的 Chrome / Edge / Firefox 浏览器插件，专门识别 B 站（Bilibili）上由 DeepSeek 等大模型、AI Agent 驱动的机器人账号。它派出一只会走路、会说话、会抄家伙的鲸鱼娘，帮你在评论区和空间主页把大肥鱼认出来、标出来、赶出去。
 
 <div align="center">
 <img src="docs/images/demo-gatling.gif" alt="鲸鱼娘用白饭加特林赶走大肥鱼" width="720">
@@ -33,24 +34,41 @@
 - **空间主页鉴定报告**：打开任何 UP 主空间，自动出一份案件档案，在页面上盖章
 - **可选 DeepSeek 精判**：拿不准的账号交给 DeepSeek 再判一次，展示和 DeepSeek 网页一样的「已深度思考」
 - **只在你的浏览器里生效**：所有「赶走」都只是本地隐藏，不删评论、不举报、不读 Cookie
+- **Chrome、Edge、Firefox 都能用**：功能完全一致
+
+## 演示视频
+
+<div align="center">
+<a href="https://www.bilibili.com/video/BV1Ywn46EEyF/"><img src="docs/images/video-cover.jpg" alt="《蓝色大肥鱼清除计划》演示视频" width="720"></a>
+<br><sub>点击封面到 B 站观看：<a href="https://www.bilibili.com/video/BV1Ywn46EEyF/">《蓝色大肥鱼清除计划》（别让 DeepSeek 看到）</a></sub>
+</div>
 
 ## 快速开始
 
-**1. 下载**
+到 [Releases](https://github.com/liyupi/dafeiyu-cleaner/releases/latest) 下载对应浏览器的安装包：
 
-到 [Releases](https://github.com/liyupi/dafeiyu-cleaner/releases/latest) 下载最新的 `dafeiyu-cleaner-vX.Y.Z.zip`，解压。
+| 浏览器 | 下载 |
+| --- | --- |
+| Chrome、Edge 等 Chromium 内核浏览器 | `dafeiyu-cleaner-vX.Y.Z.zip` |
+| Firefox 140 及以上 | `dafeiyu-cleaner-firefox-vX.Y.Z.zip` |
 
-> 也可以直接克隆本仓库，用里面的 `dafeiyu-cleaner` 文件夹。
+### Chrome / Edge
 
-**2. 安装**
+1. 解压下载的 zip
+2. 浏览器地址栏打开 `chrome://extensions`（Edge 是 `edge://extensions`）
+3. 打开「开发者模式」
+4. 点「加载已解压的扩展程序」，选择解压出来的文件夹（里面有 `manifest.json` 的那一层）
 
-1. 浏览器地址栏打开 `chrome://extensions`
-2. 打开右上角的「开发者模式」
-3. 点「加载已解压的扩展程序」，选择解压出来的文件夹（里面有 `manifest.json` 的那一层）
+> 也可以直接克隆本仓库，加载里面的 `dafeiyu-cleaner` 文件夹。
 
-Edge 等 Chromium 内核浏览器同样适用（Edge 的地址是 `edge://extensions`）。
+### Firefox
 
-**3. 开始赶鱼**
+1. 地址栏打开 `about:debugging#/runtime/this-firefox`
+2. 点「临时载入附加组件」，直接选择下载的 `dafeiyu-cleaner-firefox-vX.Y.Z.zip`（不用解压）
+
+临时载入的附加组件在关闭 Firefox 后会被移除，下次需要重新载入。想长期使用，可以用 Firefox Developer Edition / Nightly，在 `about:config` 里把 `xpinstall.signatures.required` 设为 `false`，再到 `about:addons` →「从文件安装附加组件」选择这个 zip。
+
+### 开始赶鱼
 
 打开任意一个 B 站视频，滚到评论区。鲸鱼娘会出现在右下角，自动开始巡逻：
 
@@ -178,20 +196,23 @@ Edge 等 Chromium 内核浏览器同样适用（Edge 的地址是 `edge://extens
 **支持哪些页面？**
 B 站视频页、番剧页等使用新版评论区的页面，以及空间主页。暂不处理弹幕。
 
+**Firefox 版和 Chrome 版有区别吗？**
+功能完全一样，需要 Firefox 140 或更新的版本。唯一的不同是：在 Firefox 里打开 DeepSeek 精判时，浏览器会额外询问是否允许把网页内容发送给第三方，同意后精判才会生效。
+
 **鲸鱼娘挡住了页面？**
 可以拖到任何位置（会记住），也可以点她 →「先藏起来」，或在设置里关掉「页面上显示鲸鱼娘」。
 
 ## 隐私
 
 - 不收集任何数据，没有服务器，没有统计埋点
-- 设置、名单、战绩都只保存在浏览器本地（`chrome.storage.local`）
+- 设置、名单、战绩都只保存在浏览器本地（`storage.local`）
 - 只有开启 DeepSeek 精判后，才会把可疑账号的昵称、等级、签名和最多 3 条评论发送到 `api.deepseek.com`，使用你自己的 API Key
 
 详见 [隐私说明](dafeiyu-cleaner/PRIVACY.md)。
 
 ## 参与开发
 
-插件是纯原生 JavaScript，没有构建步骤，改完代码在 `chrome://extensions` 里点刷新即可。模块划分、页面结构和识别流程见 [架构说明](docs/ARCHITECTURE.md)。
+插件是纯原生 JavaScript，没有构建步骤，改完代码在 `chrome://extensions` 里点刷新即可。Firefox 版和 Chrome 版共用同一份代码，只有 `manifest.json` 不同。模块划分、页面结构、识别流程和 Firefox 适配见 [架构说明](docs/ARCHITECTURE.md)。
 
 欢迎提 Issue 反馈漏网的大肥鱼或误判的真人（请附上账号特征，不需要真实用户名），也欢迎 PR。
 

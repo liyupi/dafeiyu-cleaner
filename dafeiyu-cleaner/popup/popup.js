@@ -239,6 +239,15 @@
   setInterval(renderHere, 1500);
 
   /* ---------- 设置 ---------- */
+  // Firefox 要求把网页内容发给第三方前取得用户授权，Chrome 不需要这一步
+  function askConsent() {
+    try {
+      if (!chrome.runtime.getURL('').startsWith('moz-extension:')) return null;
+      return chrome.permissions.request({ data_collection: ['websiteContent'] });
+    } catch (e) {
+      return null;
+    }
+  }
   for (const id of ['enabled', 'showMascot', 'sound', 'llmEnabled', 'llmAuto', 'llmVision']) {
     $(id).onchange = () => {
       S.settings[id] = $(id).checked;
@@ -246,6 +255,19 @@
       renderSettings();
       if (id === 'enabled') greet();
       if (id === 'llmEnabled' && S.settings.llmEnabled && !S.settings.llmKey) say('填一下 DeepSeek 密钥吧', 'normal');
+      const consent = id === 'llmEnabled' && S.settings.llmEnabled && askConsent();
+      if (consent)
+        consent.then(
+          (ok) => {
+            if (ok) return;
+            S.settings.llmEnabled = false;
+            $(id).checked = false;
+            save();
+            renderSettings();
+            say('不授权的话，本鲸就只用离线规则啦', 'normal');
+          },
+          () => {}
+        );
     };
   }
   $('threshold').oninput = () => {

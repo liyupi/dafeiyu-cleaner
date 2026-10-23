@@ -76,9 +76,22 @@ async function chat(messages, { key, model, maxTokens = 1200 }) {
   }
 }
 
+// Firefox 要求把网页内容发给第三方前取得用户授权（manifest 里的 data_collection_permissions）
+const NO_CONSENT = { ok: false, error: '火狐还没授权发送评论给 DeepSeek，去设置里重新打开一次精判开关' };
+const IS_FIREFOX = chrome.runtime.getURL('').startsWith('moz-extension:');
+async function consented() {
+  if (!IS_FIREFOX) return true;
+  try {
+    return await chrome.permissions.contains({ data_collection: ['websiteContent'] });
+  } catch (e) {
+    return true;
+  }
+}
+
 async function judgeComments(items, model) {
   const s = await getSettings();
   if (!s.llmKey) return { ok: false, error: '还没有配置 DeepSeek 密钥' };
+  if (!(await consented())) return NO_CONSENT;
   const res = await chat(
     [
       { role: 'system', content: SYS_COMMENTS },
@@ -95,6 +108,7 @@ async function judgeComments(items, model) {
 async function judgeSpace(profile, model, vision) {
   const s = await getSettings();
   if (!s.llmKey) return { ok: false, error: '还没有配置 DeepSeek 密钥' };
+  if (!(await consented())) return NO_CONSENT;
   const m = model || s.llmModel;
   const { avatar, ...info } = profile;
   const text = JSON.stringify(info);
