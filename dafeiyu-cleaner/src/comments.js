@@ -9,6 +9,10 @@
   const gone = new Set(); // 已赶走的 rpid
   const peeked = new Set(); // 折叠后被“偷看”的 rpid
   const spared = new Set(); // 本页被用户「放回来」的 mid，自动清场不再赶它
+  const byName = new Map(); // 本页昵称 -> mid
+  const atHidden = new Set(); // 因为 @ 了大肥鱼被隐藏的 rpid
+  let atPeek = false; // 用户点了「显示」，本页不再隐藏 @ 大肥鱼的评论
+  const quiet = () => !!DFY.settings.quiet;
   let upMid = '';
   let lastFound = 0, lastFishCount = 0;
 
@@ -21,6 +25,7 @@
     for (const it of e.data.items) {
       if (!items.has(it.rpid)) fresh.push(it.mid);
       items.set(it.rpid, it);
+      if (it.uname) byName.set(it.uname, it.mid);
       let a = accounts.get(it.mid);
       if (!a) {
         a = { acc: { mid: it.mid, uname: it.uname, avatar: it.avatar, sign: it.sign, level: it.level, verify: it.verify, vip: it.vip }, rpids: new Set(), verdict: null, llm: null };
@@ -77,6 +82,122 @@
     C.render();
   };
 
+  /* ---------------- @ 大肥鱼的评论（召唤它来看视频、跟它聊天） ---------------- */
+  function fishMid(mid) {
+    if (DFY.lists.block[mid] || DFY.memory.prior(mid) > 0) return true;
+    const a = accounts.get(String(mid));
+    return !!(a && a.verdict && a.verdict.level === 'fish');
+  }
+  /** 返回被 @ 的大肥鱼昵称，没有则返回空串 */
+  function atFish(it, blockedNames) {
+    const ats = new Map();
+    for (const x of it.ats || []) ats.set(x.n, x.m);
+    for (const m of it.text.matchAll(/@([^\s@:：，,。！!?？]{1,24})/g)) if (!ats.has(m[1])) ats.set(m[1], byName.get(m[1]) || '');
+    for (const [n, mid] of ats) {
+      if (mid && DFY.lists.white[mid]) continue;
+      if ((mid && fishMid(mid)) || blockedNames.has(n) || DFY.fishName(n)) return n;
+    }
+    return '';
+  }
+  function showAt(el) {
+    delete el.dataset.dfyAt;
+    el.style.display = '';
+    atHidden.delete(el.getAttribute('data-dfy-rpid'));
+  }
+
+  /* 极简模式的隐藏记录、被隐藏的 @ 大肥鱼评论：评论区上方一行小字，可以一键放回 */
+  const note = {
+    el: null,
+    fish: [], // 极简模式下隐藏的大肥鱼评论元素
+    added: [], // 因此新加入遣返名单的 mid
+    chars: 0,
+    addFish(els, mids, chars) {
+      this.fish.push(...els);
+      this.added.push(...mids);
+      this.chars += chars;
+      this.render();
+    },
+    render() {
+      const bc = document.querySelector('bili-comments');
+      const n = this.fish.length, m = atHidden.size;
+      if (!bc || (!n && !m)) {
+        if (this.el) this.el.remove();
+        this.el = null;
+        return;
+      }
+      if (!this.el || !this.el.isConnected) {
+        this.el = document.createElement('dfy-note');
+        this.el.attachShadow({ mode: 'open' });
+        bc.before(this.el);
+      }
+      const parts = [];
+      if (n) parts.push(`${n} 条大肥鱼评论`);
+      if (m) parts.push(`${m} 条 @ 大肥鱼的评论`);
+      const sig = parts.join('、');
+      if (this.el.dataset.sig === sig) return;
+      this.el.dataset.sig = sig;
+      // 跟随 B 站自己的配色变量，浅色 / 深色主题都不突兀
+      this.el.shadowRoot.innerHTML = `<style>
+:host{display:block;margin:4px 0 10px}
+.n{display:flex;align-items:center;gap:6px;font:13px/1.6 "PingFang SC","Microsoft YaHei",sans-serif;color:var(--text3,#9499a0)}
+button{all:unset;cursor:pointer;color:var(--brand_blue,#00aeec)}
+button:hover{text-decoration:underline}
+</style><div class="n">${DFY.icon('hide', 14, 2)}<span>大肥鱼消除计划：已隐藏 ${sig}</span><button>显示</button></div>`;
+      this.el.shadowRoot.querySelector('button').onclick = () => this.undo();
+    },
+    async undo() {
+      const els = this.fish, added = this.added, chars = this.chars;
+      this.fish = [];
+      this.added = [];
+      this.chars = 0;
+      for (const el of els) {
+        const id = el.getAttribute('data-dfy-rpid');
+        gone.delete(id);
+        peeked.add(id);
+        el.style.display = '';
+        delete el.dataset.dfyGone;
+        const it = items.get(id);
+        if (it) spared.add(it.mid);
+      }
+      if (added.length) {
+        await DFY.store.patch('blocklist', (b) => {
+          for (const mid of added) delete b[mid];
+        });
+        for (const mid of added) delete DFY.lists.block[mid];
+      }
+      if (els.length) await DFY.recordKick(-els.length, -chars);
+      atPeek = true;
+      eachRenderer((el) => el.dataset.dfyAt && showAt(el));
+      C.rejudgeAll();
+    },
+  };
+
+  /** 极简模式：不播动画，直接隐藏并记一笔 */
+  async function quietHide(els) {
+    const mids = new Set();
+    let chars = 0;
+    for (const el of els) {
+      const id = el.getAttribute('data-dfy-rpid');
+      gone.add(id);
+      DFY.fx.collapse(el, 0);
+      const it = items.get(id);
+      if (it) {
+        chars += it.text.length;
+        mids.add(it.mid);
+      }
+    }
+    const added = [];
+    for (const mid of mids) {
+      const a = accounts.get(mid);
+      if (!a) continue;
+      if (!DFY.lists.block[mid]) added.push(mid);
+      await addBlock(a);
+    }
+    await DFY.recordKick(els.length, chars);
+    note.addFish(els, added, chars);
+    C.render();
+  }
+
   /* ---------------- DOM 遍历 ---------------- */
   function eachRenderer(cb) {
     for (const bc of document.querySelectorAll('bili-comments')) {
@@ -119,6 +240,9 @@
 .dfy-llm{background:#e9efff;color:#2546b8}
 :host([dfy-level="fish"]) #body{position:relative;border-radius:10px;background:radial-gradient(rgba(255,93,138,.16) 1.2px,transparent 1.4px) 0 0/8px 8px,linear-gradient(90deg,rgba(255,93,138,.10),rgba(255,93,138,0) 70%);box-shadow:inset 4px 0 0 #ff5d8a}
 :host([dfy-level="suspect"]) #body{border-radius:10px;background:linear-gradient(90deg,rgba(232,154,28,.10),rgba(232,154,28,0) 60%);box-shadow:inset 4px 0 0 #f2b544}
+:host([dfy-q][dfy-level]) #body{background:none}
+.dfy-b.q .dfy-tag,.dfy-b.q .dfy-btn{animation:none;transform:none;box-shadow:none;border-width:1.5px;height:20px;font-size:12.5px}
+.dfy-b.q .dfy-btn:hover{transform:none;box-shadow:none;filter:brightness(1.08)}
 .dfy-lock{position:absolute;pointer-events:none;z-index:3;}
 .dfy-lock svg{width:100%;height:100%;display:block;opacity:.5;animation:dfy-lockspin 5s linear infinite}
 .dfy-lock.fire svg{opacity:.85}
@@ -145,6 +269,7 @@
     get think() { return DFY.icon('question', 14, 2.4); },
     get ok() { return DFY.icon('check', 14, 2.8); },
     get brain() { return DFY.icon('brain', 14, 2.2); },
+    get hide() { return DFY.icon('hide', 14, 2.2); },
   };
 
   function badgeHTML(a) {
@@ -152,7 +277,7 @@
     const label = v.level === 'fish' ? ICON.fish + '大肥鱼' : v.level === 'suspect' ? ICON.think + '疑似肥鱼' : ICON.ok + '人类';
     const ai = a.llm ? '<span class="ai">DS</span>' : '';
     const llmBtn = v.level === 'suspect' && DFY.settings.llmEnabled && DFY.settings.llmKey && !a.llm ? '<button class="dfy-btn dfy-llm" data-act="llm">' + ICON.brain + ' 精判</button>' : '';
-    const kickBtn = v.level !== 'human' ? '<button class="dfy-btn dfy-kick" data-act="kick">' + ICON.bowl + '回家吃白饭</button>' : '';
+    const kickBtn = v.level !== 'human' ? '<button class="dfy-btn dfy-kick" data-act="kick">' + (quiet() ? ICON.hide + '隐藏' : ICON.bowl + '回家吃白饭') + '</button>' : '';
     const okBtn = v.level !== 'human' ? '<button class="dfy-btn dfy-ok" data-act="ok">是人类</button>' : '';
     return `<span class="dfy-tag">${label} ${v.score}%${ai}</span>${kickBtn}${llmBtn}${okBtn}`;
   }
@@ -210,7 +335,8 @@
     const v = a.verdict;
     const show = v.level !== 'human' || (a.llm && DFY.settings.llmEnabled);
     p.host.setAttribute('dfy-level', v.level);
-    if (v.level === 'fish') {
+    p.host.toggleAttribute('dfy-q', quiet());
+    if (v.level === 'fish' && !quiet()) {
       ensureStyle(p.root);
       lockOn(el, isReply, p);
     } else {
@@ -223,7 +349,7 @@
       return;
     }
     ensureStyle(p.root);
-    const sig = `${v.level}|${v.score}|${!!a.llm}|${DFY.settings.llmEnabled}`;
+    const sig = `${v.level}|${v.score}|${!!a.llm}|${DFY.settings.llmEnabled}|${quiet()}`;
     if (b && b.dataset.sig === sig) return;
     if (!b) {
       const info = p.root.querySelector('bili-comment-user-info');
@@ -252,6 +378,7 @@
     }
     b.dataset.l = v.level;
     b.dataset.sig = sig;
+    b.classList.toggle('q', quiet());
     b.innerHTML = badgeHTML(a);
   }
 
@@ -261,6 +388,19 @@
     el.style.display = 'none';
     const ph = document.createElement('div');
     ph.className = 'dfy-fold';
+    const reveal = () => {
+      peeked.add(el.getAttribute('data-dfy-rpid'));
+      el.style.display = '';
+      delete el.dataset.dfyFolded;
+      ph.remove();
+    };
+    if (quiet()) {
+      ph.setAttribute('style', 'margin:4px 0 4px ' + (el.tagName === 'BILI-COMMENT-REPLY-RENDERER' ? '0' : '80px') + ';font:13px/1.6 "PingFang SC","Microsoft YaHei",sans-serif;color:var(--text3,#9499a0)');
+      ph.innerHTML = `已折叠 @${esc(a.acc.uname)} 的大肥鱼评论（${a.verdict.score}%） <button style="all:unset;cursor:pointer;color:var(--brand_blue,#00aeec)">显示</button>`;
+      ph.querySelector('button').onclick = reveal;
+      el.before(ph);
+      return;
+    }
     ph.setAttribute(
       'style',
       'margin:6px 0 6px ' + (el.tagName === 'BILI-COMMENT-REPLY-RENDERER' ? '0' : '80px') + ';padding:5px 12px 5px 8px;border-radius:10px;background:#f5eadd;border:2px dashed #151a3d;color:#151a3d;font:600 13px "PingFang SC","Microsoft YaHei",sans-serif;display:flex;align-items:center;gap:8px'
@@ -268,12 +408,7 @@
     const home = DFY.actors.src('home');
     const pic = home ? `<img src="${home}" alt="" style="width:38px;height:38px;margin:-6px 0;flex:none">` : `<span style="color:#2546b8;display:flex">${DFY.icon('bowl', 18, 2)}</span>`;
     ph.innerHTML = `${pic}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">@${esc(a.acc.uname)} 被装进白饭碗，回家吃饭去了（肥鱼浓度 ${a.verdict.score}%）</span><button style="all:unset;cursor:pointer;flex:none;color:#2546b8;font:400 14px 'DFY Display','PingFang SC',sans-serif;letter-spacing:.5px;border:2px solid #151a3d;border-radius:6px;padding:0 8px;background:#fffaf2">偷看一眼</button>`;
-    ph.querySelector('button').onclick = () => {
-      peeked.add(el.getAttribute('data-dfy-rpid'));
-      el.style.display = '';
-      delete el.dataset.dfyFolded;
-      ph.remove();
-    };
+    ph.querySelector('button').onclick = reveal;
     el.before(ph);
   }
 
@@ -293,6 +428,8 @@
     let fishEls = 0;
     const fishMids = new Set();
     const autoKick = [];
+    const atOn = s.hideAtFish && !atPeek;
+    const blockedNames = atOn ? new Set(Object.values(DFY.lists.block).map((b) => b.n)) : null;
     eachRenderer((el, isReply) => {
       const id = el.getAttribute('data-dfy-rpid');
       const it = id && items.get(id);
@@ -309,6 +446,12 @@
         return;
       }
       decorate(el, isReply, a);
+      const at = atOn && a.verdict.level !== 'fish' ? atFish(it, blockedNames) : '';
+      if (at && !el.dataset.dfyAt) {
+        el.dataset.dfyAt = at;
+        el.style.display = 'none';
+        atHidden.add(id);
+      } else if (!at && el.dataset.dfyAt) showAt(el);
       if (a.verdict.level === 'fish') {
         if (!el.dataset.dfyFolded) fishEls++;
         fishMids.add(it.mid);
@@ -325,6 +468,7 @@
     }
     lastFishCount = fishEls;
     if (autoKick.length) autoKickRun(autoKick);
+    note.render();
   }
 
   /* ---------------- 自动清场 ----------------
@@ -339,6 +483,11 @@
   }
   function autoKickRun(list) {
     if (autoBusy || snapping) return;
+    if (quiet()) {
+      autoBusy = true;
+      quietHide(list.map((x) => x.el)).finally(() => (autoBusy = false));
+      return;
+    }
     if (!autoSnapDone) {
       clearTimeout(autoTimer);
       autoTimer = setTimeout(() => {
@@ -416,6 +565,7 @@
       const it2 = id2 && items.get(id2);
       if (it2 && it2.mid === a.acc.mid && !gone.has(id2)) all.push(e2);
     });
+    if (quiet() && style !== 'bubblePop') return quietHide(all.length ? all : [el]);
     let chars = 0;
     for (const e2 of all) {
       const id2 = e2.getAttribute('data-dfy-rpid');
@@ -526,6 +676,15 @@
       if (!opt.auto) DFY.ui.say(DFY.say('snapNone'), { face: 'smug' });
       return;
     }
+    if (quiet()) {
+      for (const el of targets) {
+        if (!el.dataset.dfyFolded) continue;
+        const ph = el.previousElementSibling;
+        if (ph && ph.classList && ph.classList.contains('dfy-fold')) ph.remove();
+        delete el.dataset.dfyFolded;
+      }
+      return quietHide(targets);
+    }
     snapping = true;
     const A = DFY.actors;
     const html = document.documentElement;
@@ -537,7 +696,7 @@
     const bc = document.querySelector('bili-comments');
     const br = bc ? bc.getBoundingClientRect() : { left: innerWidth / 3, width: innerWidth / 3 };
     DFY.ui.say(opt.auto ? '进门先清场，本鲸来了！' : DFY.say('snapStart'), { face: 'smug', ms: 2200 });
-    await A.walkTo(br.left + br.width / 2 - 66, 70);
+    await A.walkTo(br.left + br.width / 2 - DFY.ui.size().w / 2, 70);
     // 2. 视野里的每条大肥鱼都冒出来，吓得发抖
     const visible = targets.filter((el) => DFY.fx.inView(el)).slice(0, 10);
     const fishes = [];
@@ -810,6 +969,6 @@ ${DFY.mascotCSS}
   C.stats = () => {
     let suspect = 0;
     for (const a of accounts.values()) if (a.verdict && a.verdict.level === 'suspect') suspect++;
-    return { accounts: accounts.size, items: items.size, fish: C.fishCount || 0, suspect, kicked: gone.size };
+    return { accounts: accounts.size, items: items.size, fish: C.fishCount || 0, suspect, kicked: gone.size, atHidden: atHidden.size, quiet: quiet() };
   };
 })();

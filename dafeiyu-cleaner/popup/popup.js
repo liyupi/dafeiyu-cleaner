@@ -49,6 +49,13 @@
     fold: '自动把大肥鱼装进白饭碗折叠起来，想看可以「偷看一眼」。',
     auto: '每次进入页面，评论区一出现，鲸鱼娘就自动走过去打响指清场；之后翻页加载出来的新大肥鱼也会被直接赶走。随时可以在战报里「全部放回」。',
   };
+  const QUIET_MODE_HINT = {
+    mark: '只在评论旁挂一个小标签，不打扰你。',
+    fold: '大肥鱼评论折叠成一行小字，想看点「显示」。',
+    auto: '大肥鱼评论直接隐藏，评论区上方留一行小字，点「显示」可以全部放回。',
+  };
+  const MODE_LABEL = { mark: '只标记', fold: '装进白饭碗', auto: '自动清场' };
+  const QUIET_MODE_LABEL = { mark: '只标记', fold: '折叠', auto: '直接隐藏' };
 
   const WPN_HINT = {
     random: '每次随机换一种武器；响指清场时偶尔会换成加特林挨个点射。',
@@ -59,16 +66,23 @@
     rice: '让它自己走，一路朝它扔白饭，最后往它离场的地方再扔一碗。',
   };
 
+  const TOGGLES = ['enabled', 'quiet', 'hideAtFish', 'showMascot', 'sound', 'llmEnabled', 'llmAuto', 'llmVision'];
   function renderSettings() {
     const s = S.settings;
-    for (const id of ['enabled', 'showMascot', 'sound', 'llmEnabled', 'llmAuto', 'llmVision']) $(id).checked = !!s[id];
+    for (const id of TOGGLES) $(id).checked = !!s[id];
+    document.querySelector('[data-panel=detect]').classList.toggle('quiet', !!s.quiet);
+    $('mascotSize').value = s.mascotSize || 100;
+    $('ms-val').textContent = (s.mascotSize || 100) + '%';
     $('threshold').value = s.threshold;
     $('th-val').textContent = s.threshold + '%';
     $('th-hint').textContent = `肥鱼浓度 ≥ ${s.threshold}% 判为大肥鱼，${Math.max(25, s.threshold - 25)}% 起算可疑。`;
     $('llmKey').value = s.llmKey || '';
     $('llmModel').value = s.llmModel;
-    for (const b of $('mode').children) b.classList.toggle('on', b.dataset.v === s.mode);
-    $('mode-hint').textContent = MODE_HINT[s.mode];
+    for (const b of $('mode').children) {
+      b.classList.toggle('on', b.dataset.v === s.mode);
+      b.textContent = (s.quiet ? QUIET_MODE_LABEL : MODE_LABEL)[b.dataset.v];
+    }
+    $('mode-hint').textContent = (s.quiet ? QUIET_MODE_HINT : MODE_HINT)[s.mode];
     for (const b of $('weapon').children) b.classList.toggle('on', b.dataset.v === (s.weapon || 'random'));
     $('wpn-hint').textContent = WPN_HINT[s.weapon || 'random'];
     document.querySelector('.ds').classList.toggle('off', !s.llmEnabled);
@@ -158,15 +172,15 @@
     } else if (st.fish) {
       cls = 'fish';
       t = `本页 ${st.fish} 条大肥鱼`;
-      s = `巡逻 ${st.accounts} 个账号 · 可疑 ${st.suspect} · 已赶走 ${st.kicked}`;
-      btns = [['snap', '响指清场', ''], ['cannon', '泡泡炮', 'ghost']];
+      s = `巡逻 ${st.accounts} 个账号 · 可疑 ${st.suspect} · ${st.quiet ? '已隐藏' : '已赶走'} ${st.kicked}${st.atHidden ? ` · @ 大肥鱼 ${st.atHidden}` : ''}`;
+      btns = st.quiet ? [['snap', '全部隐藏', '']] : [['snap', '响指清场', ''], ['cannon', '泡泡炮', 'ghost']];
     } else if (st.comments && st.accounts) {
       t = '本页很干净';
-      s = `巡逻 ${st.accounts} 个账号 · 可疑 ${st.suspect} · 已赶走 ${st.kicked}`;
-      btns = [['rescan', '重新巡逻', 'ghost'], ['cannon', '泡泡炮', 'ghost']];
+      s = `巡逻 ${st.accounts} 个账号 · 可疑 ${st.suspect} · ${st.quiet ? '已隐藏' : '已赶走'} ${st.kicked}${st.atHidden ? ` · @ 大肥鱼 ${st.atHidden}` : ''}`;
+      btns = st.quiet ? [] : [['rescan', '重新巡逻', 'ghost'], ['cannon', '泡泡炮', 'ghost']];
     } else if (st.space) {
       t = '空间主页';
-      s = '鉴定报告在页面右上角';
+      s = st.quiet ? '极简模式下不自动弹出鉴定报告' : '鉴定报告在页面右上角';
       btns = [['report', '鉴定报告', ''], ['cannon', '泡泡炮', 'ghost']];
     } else {
       t = '还没看到评论区';
@@ -248,12 +262,16 @@
       return null;
     }
   }
-  for (const id of ['enabled', 'showMascot', 'sound', 'llmEnabled', 'llmAuto', 'llmVision']) {
+  for (const id of TOGGLES) {
     $(id).onchange = () => {
       S.settings[id] = $(id).checked;
+      // 极简模式的用意就是让大肥鱼直接消失，「只标记」顺手换成「直接隐藏」
+      if (id === 'quiet' && S.settings.quiet && S.settings.mode === 'mark') S.settings.mode = 'auto';
       save();
       renderSettings();
       if (id === 'enabled') greet();
+      if (id === 'quiet') say(S.settings.quiet ? '本鲸躲起来悄悄干活' : '本鲸回来啦！', S.settings.quiet ? 'smug' : 'happy');
+      if (id === 'hideAtFish' && S.settings.hideAtFish) say('召唤大肥鱼的评论也一起藏起来', 'smug');
       if (id === 'llmEnabled' && S.settings.llmEnabled && !S.settings.llmKey) say('填一下 DeepSeek 密钥吧', 'normal');
       const consent = id === 'llmEnabled' && S.settings.llmEnabled && askConsent();
       if (consent)
@@ -270,6 +288,11 @@
         );
     };
   }
+  $('mascotSize').oninput = () => {
+    S.settings.mascotSize = +$('mascotSize').value;
+    $('ms-val').textContent = S.settings.mascotSize + '%';
+    save();
+  };
   $('threshold').oninput = () => {
     S.settings.threshold = +$('threshold').value;
     renderSettings();

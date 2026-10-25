@@ -50,7 +50,7 @@ B 站评论组件挂载 / 更新
   → 在评论的 shadow DOM 里插入标签、靶心、按钮
 ```
 
-`main-world.js` 包装了评论组件原型上的 `connectedCallback` / `updated`，组件一挂载就扫描，另有 1.5 秒轮询兜底。
+`main-world.js` 包装了评论组件原型上的 `connectedCallback` / `updated`，组件一挂载就扫描，另有 1.5 秒轮询兜底。每条评论还会带上 `ats`（评论里 @ 到的人，来自 `content.at_name_to_mid` / `content.members`）。
 
 ### B 站评论 DOM
 
@@ -112,6 +112,24 @@ B 站改版时最先坏的就是这里，相关查询集中在 `comments.js` 的
 
 被赶走的一方一律往左边离场，所以鲸鱼娘总是站在目标右边。
 
+### 极简模式（`settings.quiet`）
+
+- `content.js` 不显示鲸鱼娘，空间页不自动跑鉴定
+- `ui.say` / `ui.think` / `ui.combo` 和 `fx.emit` / `flash` / `shake`、音效全部静默，所以零散的调用点不用逐个判断
+- `comments.js` 里单条赶走、响指、自动清场都改走 `quietHide`：直接收起、写遣返名单、记战绩，不生成动作图
+- 标签加 `.q` 扁平样式、不画靶心；折叠条换成一行文字
+- 隐藏记录显示在评论区上方的 `<dfy-note>`，颜色用 B 站自己的 CSS 变量（`--text3`、`--brand_blue`），深色主题下也协调；点「显示」会撤销本页的隐藏并把相关账号移出遣返名单
+
+### 隐藏 @ 大肥鱼的评论（`settings.hideAtFish`）
+
+`doRender` 对每条非大肥鱼的评论调用 `atFish`：被 @ 的人（`ats` 加上正文里的 `@昵称`）满足任意一条即命中——本页判为大肥鱼、在遣返名单（按 mid 或昵称）、有前科、或 `DFY.fishName(昵称)` 为真。白名单里的人不算。命中的评论打上 `data-dfy-at` 并隐藏，计入 `<dfy-note>`；被 @ 的人后来改判为人类时自动恢复。
+
+`DFY.fishName` 只看名字：把「鱼京」还原成「鲸」后跑昵称规则，≥ 40 分或以「的鱼 / 的鲸」结尾即为真。
+
+### 鲸鱼娘大小
+
+`.mascot` 上的 CSS 变量 `--ms` 控制本体、气泡、菜单的尺寸和位置；JS 里需要尺寸的地方统一用 `DFY.ui.size()`，不要写死 132×153。
+
 ### 动作图与武器图
 
 | 名字 | 用途 |
@@ -130,7 +148,7 @@ B 站改版时最先坏的就是这里，相关查询集中在 `comments.js` 的
 
 | 键 | 内容 |
 | --- | --- |
-| `settings` | 开关、处理方式 `mode`（mark / fold / auto）、阈值、武器、DeepSeek 配置 |
+| `settings` | 开关、处理方式 `mode`（mark / fold / auto）、阈值、武器、极简模式 `quiet`、隐藏 @ 大肥鱼 `hideAtFish`、鲸鱼娘大小 `mascotSize`（60–150）、DeepSeek 配置 |
 | `stats` | 战绩 |
 | `blocklist` | 遣返名单 `mid → {n, a, t, s}` |
 | `whitelist` | 人类白名单 `mid → {n, t}` |

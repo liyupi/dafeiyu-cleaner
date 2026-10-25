@@ -8,7 +8,7 @@
   /* ---------------- 音效（WebAudio 现场合成，无需音频文件） ---------------- */
   let ac = null;
   function ctx() {
-    if (!DFY.settings || !DFY.settings.sound) return null;
+    if (!DFY.settings || !DFY.settings.sound || DFY.settings.quiet) return null;
     // 浏览器要求用户先和页面交互过才能出声，否则静默跳过
     if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return null;
     try {
@@ -121,7 +121,10 @@
   };
 
   const rand = (a, b) => a + Math.random() * (b - a);
+  const quiet = () => !!(DFY.settings && DFY.settings.quiet);
+  fx.quiet = quiet;
   fx.emit = function (type, x, y, n, o = {}) {
+    if (quiet()) return;
     for (let i = 0; i < n; i++) {
       const p = { type, x: x + rand(-(o.spreadX || 0), o.spreadX || 0), y: y + rand(-(o.spreadY || 0), o.spreadY || 0), life: 0 };
       if (type === 'dust') {
@@ -255,6 +258,7 @@
   };
 
   fx.flash = function (color = 'rgba(160,200,255,.75)', dur = 380) {
+    if (quiet()) return;
     const d = overlay('', 'flash');
     d.style.background = color;
     d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur, easing: 'ease-out' }).onfinish = () => d.remove();
@@ -262,7 +266,7 @@
 
   fx.shake = function (power = 6) {
     const el = document.body;
-    if (!el) return;
+    if (!el || quiet()) return;
     el.animate(
       [0, 1, 2, 3, 4, 5].map((i) => ({ transform: i === 5 ? 'none' : `translate(${(Math.random() - 0.5) * power}px,${(Math.random() - 0.5) * power}px)` })),
       { duration: 280 }

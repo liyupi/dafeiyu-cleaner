@@ -18,10 +18,21 @@
       verify: m.official_verify ? m.official_verify.type : -1,
       vip: (m.vip && m.vip.vipStatus) || 0,
       text: (d.content && d.content.message) || '',
+      ats: atsOf(d.content),
       ctime: d.ctime || 0,
       like: d.like || 0,
       isReply: !!isReply,
     };
+  }
+
+  // 评论里 @ 到的人：[{n: 昵称, m: mid}]
+  function atsOf(c) {
+    const out = [];
+    if (!c) return out;
+    const map = c.at_name_to_mid || {};
+    for (const n in map) out.push({ n, m: String(map[n]) });
+    for (const m of c.members || []) if (m && m.uname && !(m.uname in map)) out.push({ n: m.uname, m: String(m.mid) });
+    return out;
   }
 
   function upMid() {

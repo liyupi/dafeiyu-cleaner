@@ -38,6 +38,8 @@
   </nav>
 
   <section class="panel" data-panel="detect">
+    <div class="row first"><span class="lbl" data-ic="hide">极简模式</span><label class="switch"><input type="checkbox" id="quiet"><span></span></label></div>
+    <p class="hint quiet-hint">不播动画、不出声，鲸鱼娘也不出场，大肥鱼评论悄悄消失。</p>
     <div class="field-h">发现大肥鱼后</div>
     <div class="seg" id="mode">
       <button data-v="mark">只标记</button>
@@ -48,6 +50,9 @@
     <div class="field-h">鉴定严格度 <em id="th-val">60</em></div>
     <div class="slider"><span>宽松</span><input type="range" id="threshold" min="45" max="80" step="5"><span>严格</span></div>
     <p class="hint" id="th-hint"></p>
+    <div class="row"><span class="lbl" data-ic="target">隐藏 @ 大肥鱼的评论</span><label class="switch"><input type="checkbox" id="hideAtFish"><span></span></label></div>
+    <p class="hint small at-hint">有人 @ 大肥鱼、叫它来看视频或者跟它聊天的评论，也一起隐藏。评论区上方会留一行小字，可以点「显示」。</p>
+    <div class="noisy">
     <div class="field-h">赶走时用的武器</div>
     <div class="seg wpn" id="weapon">
       <button data-v="random">随机</button>
@@ -59,7 +64,10 @@
     </div>
     <p class="hint" id="wpn-hint"></p>
     <div class="row"><span class="lbl" data-ic="whale">页面上显示鲸鱼娘</span><label class="switch"><input type="checkbox" id="showMascot"><span></span></label></div>
+    <div class="row"><span class="lbl" data-ic="sparkle">鲸鱼娘大小 <em class="mini" id="ms-val">100%</em></span><input type="range" class="size" id="mascotSize" min="60" max="150" step="10"></div>
+    <p class="hint small size-hint">也可以在页面上按住 <kbd>Alt</kbd> 在鲸鱼娘身上滚动滚轮。</p>
     <div class="row"><span class="lbl" data-ic="volume">咕噜音效</span><label class="switch"><input type="checkbox" id="sound"><span></span></label></div>
+    </div>
     <div class="row"><span class="lbl" data-ic="report">前科记忆 <em class="mini" id="seen-n">0</em></span><button class="link" id="seen-clear">清空</button></div>
     <p class="hint small">同一账号在多个视频下都被认出是大肥鱼，以后见到会直接加分。只存在本机。</p>
     <p class="hint small keys">快捷键：<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> 响指清场，<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> 泡泡大炮</p>

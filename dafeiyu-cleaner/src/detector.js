@@ -168,6 +168,15 @@
     return { score: s, reasons };
   };
 
+  /** 只看名字像不像大肥鱼（给被 @ 的对象用，拿不到它的资料）；「鱼京」是拆开写的「鲸」 */
+  DFY.fishName = function (name) {
+    const n = clean(name).replace(/鱼京/g, '鲸');
+    if (/(?:的|の)(?:大|小)?肥?(?:鱼|鲸)$/.test(n)) return true;
+    let s = 0;
+    for (const r of NAME_RULES) if (r.re.test(n)) s += r.w;
+    return s >= 40;
+  };
+
   /**
    * 综合判定一个账号（结合其在本页的所有评论）
    * texts: 该账号在页面上的评论文本数组

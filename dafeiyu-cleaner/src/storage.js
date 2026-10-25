@@ -8,7 +8,10 @@
       mode: 'mark', // mark 只标记 | fold 折叠进白饭碗 | auto 自动赶走
       weapon: 'random', // 赶走时用的武器：random | slap | gatling | broom | sock | rice
       threshold: 60, // 大于等于此分数判定为大肥鱼
+      quiet: false, // 极简模式：不出场、不出声、不播动画，大肥鱼评论直接隐藏
+      hideAtFish: false, // 连 @ 大肥鱼的评论一起隐藏
       showMascot: true,
+      mascotSize: 100, // 页面上鲸鱼娘的大小（%）
       sound: true,
       llmEnabled: false,
       llmKey: '',

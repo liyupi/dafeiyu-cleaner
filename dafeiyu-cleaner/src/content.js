@@ -34,14 +34,17 @@
   }
   DFY.ui.mount();
   DFY.store.get('customMascot').then((u) => u && DFY.ui.setCustom(u));
-  DFY.ui.show(DFY.settings.enabled && DFY.settings.showMascot);
+  const showMascot = (s) => s.enabled && s.showMascot && !s.quiet;
+  DFY.ui.look(DFY.settings);
+  DFY.ui.show(showMascot(DFY.settings));
 
   DFY.store.onChange((ch) => {
     if (ch.settings) {
       const prev = DFY.settings;
       DFY.settings = Object.assign({}, DFY.DEFAULTS.settings, ch.settings);
-      DFY.ui.show(DFY.settings.enabled && DFY.settings.showMascot);
-      if (prev.threshold !== DFY.settings.threshold || prev.mode !== DFY.settings.mode || prev.llmEnabled !== DFY.settings.llmEnabled || prev.enabled !== DFY.settings.enabled) DFY.comments.rejudgeAll();
+      DFY.ui.look(DFY.settings);
+      DFY.ui.show(showMascot(DFY.settings));
+      if (['threshold', 'mode', 'llmEnabled', 'enabled', 'quiet', 'hideAtFish'].some((k) => prev[k] !== DFY.settings[k])) DFY.comments.rejudgeAll();
     }
     if ('customMascot' in ch) DFY.ui.setCustom(ch.customMascot || '');
     if (ch.blocklist) DFY.lists.block = ch.blocklist || {};
@@ -111,7 +114,8 @@
     const mid = DFY.space.midFromUrl();
     if (mid && mid !== lastMid) {
       lastMid = mid;
-      setTimeout(() => DFY.space.run(), 900);
+      // 极简模式不自动弹鉴定报告，需要时从插件面板打开
+      if (!DFY.settings.quiet) setTimeout(() => DFY.space.run(), 900);
     }
   };
   checkRoute();

@@ -20,11 +20,11 @@
 .big-bubble{border-radius:50%;border:2.5px solid rgba(21,26,61,.55);background:radial-gradient(circle at 30% 28%,rgba(255,255,255,.95) 0 6%,rgba(255,255,255,0) 7%),radial-gradient(circle at 50% 50%,rgba(170,215,255,.08) 55%,rgba(111,224,255,.35) 78%,rgba(220,245,255,.75) 100%)}
 
 /* —— 鲸鱼娘本体 —— */
-.mascot{position:fixed;width:132px;z-index:5;pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:none}
-.mascot .whale-box{width:132px;height:153px;cursor:grab;filter:drop-shadow(3px 4px 0 rgba(21,26,61,.22));transition:transform .2s}
+.mascot{--ms:1;position:fixed;width:calc(132px*var(--ms));z-index:5;pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:none}
+.mascot .whale-box{width:calc(132px*var(--ms));height:calc(153px*var(--ms));cursor:grab;filter:drop-shadow(3px 4px 0 rgba(21,26,61,.22));transition:transform .2s}
 .mascot .whale-box:hover{transform:scale(1.04) rotate(-2deg)}
 .mascot.dragging .whale-box{cursor:grabbing;transform:scale(1.08) rotate(4deg)}
-.mascot.min .whale-box{transform:translateY(98px) scale(.8)}
+.mascot.min .whale-box{transform:translateY(calc(98px*var(--ms))) scale(.8)}
 .mascot.min .bubble,.mascot.min .think,.mascot.min .menu,.mascot.min .count{display:none}
 .whale-box.has-custom .dfy-whale{display:none}
 .whale-box img.custom{width:100%;height:100%;object-fit:contain;animation:dfy-bob 2.6s ease-in-out infinite}
@@ -35,14 +35,14 @@
 @keyframes dfy-pulse{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(-6deg) scale(1.08)}}
 
 /* 漫画对话框 */
-.bubble{position:absolute;bottom:172px;right:0;width:max-content;min-width:120px;max-width:260px;background:var(--paper2);border:2.5px solid var(--ink);border-radius:16px;padding:9px 14px;font-size:13.5px;font-weight:700;color:var(--ink);box-shadow:4px 4px 0 var(--ink);opacity:0;transform:translateY(8px) scale(.9);transform-origin:bottom right;transition:all .22s cubic-bezier(.3,1.5,.5,1);pointer-events:none}
+.bubble{position:absolute;bottom:calc(153px*var(--ms) + 19px);right:0;width:max-content;min-width:120px;max-width:260px;background:var(--paper2);border:2.5px solid var(--ink);border-radius:16px;padding:9px 14px;font-size:13.5px;font-weight:700;color:var(--ink);box-shadow:4px 4px 0 var(--ink);opacity:0;transform:translateY(8px) scale(.9);transform-origin:bottom right;transition:all .22s cubic-bezier(.3,1.5,.5,1);pointer-events:none}
 .bubble.show{opacity:1;transform:none}
 .bubble:after{content:"";position:absolute;bottom:-10px;right:46px;width:15px;height:15px;background:var(--paper2);border-right:2.5px solid var(--ink);border-bottom:2.5px solid var(--ink);transform:rotate(45deg) skew(8deg,8deg)}
 .mascot.left .bubble,.mascot.left .think{right:auto;left:0;transform-origin:bottom left}
 .mascot.left .bubble:after{right:auto;left:46px}
 
 /* DeepSeek 风格的思考框（梗本身就是 DeepSeek 界面，保留它的样子） */
-.think{position:absolute;bottom:172px;right:0;width:280px;background:#f7f8fb;border:1.5px solid #dfe3ee;border-radius:14px;padding:10px 12px 9px;font-size:12.5px;color:#5b6378;box-shadow:0 10px 26px rgba(21,26,61,.16);display:none;pointer-events:auto}
+.think{position:absolute;bottom:calc(153px*var(--ms) + 19px);right:0;width:280px;background:#f7f8fb;border:1.5px solid #dfe3ee;border-radius:14px;padding:10px 12px 9px;font-size:12.5px;color:#5b6378;box-shadow:0 10px 26px rgba(21,26,61,.16);display:none;pointer-events:auto}
 .think.show{display:block;animation:dfy-in .25s ease-out}
 .think .hd{display:flex;align-items:center;gap:6px;font-weight:700;color:#4d6bfe;margin-bottom:6px;font-size:12.5px}
 .think .hd .dot{width:7px;height:7px;border-radius:50%;background:#4d6bfe;animation:dfy-blinkdot .8s infinite}
@@ -52,7 +52,7 @@
 @keyframes dfy-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 /* 菜单：贴纸按钮 */
-.menu{position:absolute;bottom:172px;right:-6px;display:none;flex-direction:column;gap:8px;align-items:flex-end}
+.menu{position:absolute;bottom:calc(153px*var(--ms) + 19px);right:-6px;display:none;flex-direction:column;gap:8px;align-items:flex-end}
 .mascot.left .menu{right:auto;left:-6px;align-items:flex-start}
 .menu.show{display:flex}
 .menu button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:7px;background:var(--paper2);border:2.5px solid var(--ink);border-radius:10px;padding:6px 13px 6px 10px;font-family:var(--disp);font-size:15px;letter-spacing:.5px;color:var(--ink);box-shadow:3px 3px 0 var(--ink);white-space:nowrap;transition:transform .12s,box-shadow .12s;animation:dfy-pop-in .3s cubic-bezier(.3,1.6,.5,1) both}
@@ -74,6 +74,7 @@
 .toast .act{all:unset;pointer-events:auto;cursor:pointer;flex:none;align-self:center;display:inline-flex;align-items:center;gap:4px;font-family:var(--disp);font-size:14px;letter-spacing:1px;padding:3px 10px;border:2px solid var(--ink);border-radius:8px;background:var(--paper2);box-shadow:2px 2px 0 var(--ink)}
 .toast .act:hover{background:var(--cyan)}
 .toast .act:active{transform:translate(1px,1px);box-shadow:none}
+.wrap.q .toast{animation:none}
 @keyframes dfy-slide-l{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:none}}
 
 /* 连击 */
@@ -209,6 +210,23 @@ ${DFY.mascotCSS}
 
   /* ---------------- 鲸鱼娘本体 ---------------- */
   let sayTimer = 0, faceTimer = 0, lastAct = Date.now(), busy = false;
+  const quiet = () => !!(DFY.settings && DFY.settings.quiet);
+  ui.scale = 1;
+  /** 鲸鱼娘当前的宽高（随大小设置变化） */
+  ui.size = () => ({ w: 132 * ui.scale, h: 153 * ui.scale });
+  /** 应用外观设置：大小、极简模式 */
+  ui.look = function (s) {
+    if (!ui.root) return;
+    $('.wrap').classList.toggle('q', !!s.quiet);
+    const k = Math.max(60, Math.min(150, +s.mascotSize || 100)) / 100;
+    if (k === ui.scale) return;
+    ui.scale = k;
+    ui.mascotEl.style.setProperty('--ms', k);
+    if (ui.place) {
+      const r = ui.mascotEl.getBoundingClientRect();
+      ui.place(r.left, r.top);
+    }
+  };
   ui.face = function (f, ms) {
     ui.whale.setAttribute('data-face', f);
     ui.mascotEl.dataset.mood = f;
@@ -242,7 +260,7 @@ ${DFY.mascotCSS}
     if (ms) setTimeout(() => ui.whale.setAttribute('data-pose', 'idle'), ms);
   };
   ui.say = function (text, o = {}) {
-    if (!ui.root) return;
+    if (!ui.root || quiet()) return;
     const b = $('.bubble');
     b.textContent = text;
     b.classList.add('show');
@@ -259,6 +277,7 @@ ${DFY.mascotCSS}
 
   /** DeepSeek 风格思考气泡；返回 {update(text), done(seconds)} */
   ui.think = function (initial) {
+    if (quiet()) return { update() {}, done() {}, close() {} };
     const t = $('.think');
     $('.bubble').classList.remove('show');
     t.classList.remove('done');
@@ -303,14 +322,16 @@ ${DFY.mascotCSS}
     const m = ui.mascotEl;
     const box = $('.whale-box');
     const place = (x, y) => {
-      x = Math.max(4, Math.min(innerWidth - 136, x));
-      y = Math.max(160, Math.min(innerHeight - 150, y));
+      const { w, h } = ui.size();
+      x = Math.max(4, Math.min(innerWidth - w - 4, x));
+      y = Math.max(h + 7, Math.min(innerHeight - h + 3, y));
       m.style.left = x + 'px';
       m.style.top = y + 'px';
       m.classList.toggle('left', x < innerWidth / 2);
     };
     ui.place = place;
-    const def = () => place(innerWidth - 230, innerHeight - 175); // 避开 B 站右侧的小窗/客服浮动按钮
+    ui.homePoint = () => ({ x: innerWidth - 98 - ui.size().w, y: innerHeight - 22 - ui.size().h }); // 避开 B 站右侧的小窗/客服浮动按钮
+    const def = () => place(ui.homePoint().x, ui.homePoint().y);
     DFY.store.get('mascotPos').then((p) => (p && p.x != null ? place(Math.round(p.x * innerWidth), Math.round(p.y * innerHeight)) : def()));
     addEventListener('resize', () => {
       const r = m.getBoundingClientRect();
@@ -358,7 +379,7 @@ ${DFY.mascotCSS}
       if (clicks.length >= 3) {
         ui.menu(false);
         ui.say(DFY.say('pet'), { face: 'happy', ms: 1800 });
-        DFY.fx.emit('star', m.getBoundingClientRect().left + 66, m.getBoundingClientRect().top + 30, 6);
+        DFY.fx.emit('star', m.getBoundingClientRect().left + ui.size().w / 2, m.getBoundingClientRect().top + 30, 6);
         DFY.sfx.bloop();
         DFY.bump('pets');
         return;
@@ -366,6 +387,25 @@ ${DFY.mascotCSS}
       ui.menu();
     });
     $('.count').addEventListener('click', () => ui.menu(true));
+
+    // 按住 Alt 在鲸鱼娘身上滚滚轮：调大小
+    let sizeTimer = 0;
+    box.addEventListener(
+      'wheel',
+      (e) => {
+        if (!e.altKey) return;
+        e.preventDefault();
+        const cur = Math.round(ui.scale * 10) * 10;
+        const next = Math.max(60, Math.min(150, cur + (e.deltaY < 0 ? 10 : -10)));
+        if (next === cur) return;
+        DFY.settings.mascotSize = next;
+        ui.look(DFY.settings);
+        ui.say(`${next}%`, { ms: 900 });
+        clearTimeout(sizeTimer);
+        sizeTimer = setTimeout(() => DFY.store.patch('settings', (st) => void (st.mascotSize = next)), 300);
+      },
+      { passive: false }
+    );
 
     // 闲聊 & 打瞌睡
     setInterval(() => {
@@ -453,6 +493,7 @@ ${DFY.mascotCSS}
   };
   let comboTimer = 0;
   ui.combo = function (n, label) {
+    if (quiet()) return;
     const c = $('.combo');
     $('.x', c).textContent = `COMBO ×${n}`;
     $('.l', c).textContent = label || '已赶走大肥鱼';

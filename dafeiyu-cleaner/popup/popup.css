@@ -94,6 +94,10 @@ kbd{font:700 10.5px/1 ui-monospace,Menlo,monospace;border:1.5px solid var(--ink)
 .seg.wpn button{font-size:13px;letter-spacing:0;padding:4px 0}
 .slider{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--muted)}
 .slider input{flex:1;accent-color:var(--blue)}
+input.size{width:130px;accent-color:var(--blue)}
+.size-hint{margin:0 0 6px}
+.quiet-hint{margin-top:4px}
+.panel.quiet .noisy{display:none}
 
 .switch{position:relative;display:inline-block;width:44px;height:24px;flex:none}
 .switch input{opacity:0;width:0;height:0}

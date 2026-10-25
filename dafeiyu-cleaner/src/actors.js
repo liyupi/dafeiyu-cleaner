@@ -143,11 +143,11 @@
   A.clear = () => DFY.ui.layer && DFY.ui.layer.querySelectorAll('.dfy-actor').forEach((d) => d.remove());
 
   /* ---------------- 鲸鱼娘走位 ---------------- */
-  const W = 132, H = 153;
   /** 走到视口坐标 (x, y)（鲸鱼娘左上角），返回 Promise */
   A.walkTo = async function (x, y, ms) {
     const m = DFY.ui.mascotEl;
     if (!m || m.style.display === 'none') return;
+    const { w: W, h: H } = DFY.ui.size();
     if (m.classList.contains('min')) m.classList.remove('min');
     x = Math.max(4, Math.min(innerWidth - W - 4, x));
     y = Math.max(50, Math.min(innerHeight - H - 4, y));
@@ -167,11 +167,13 @@
   };
   /** 走到某个视口点的右边（被赶走的一方从左边溜走，鲸鱼娘站右边往左赶） */
   A.approachPoint = function (x, y, ms) {
+    const { w: W, h: H } = DFY.ui.size();
     const left = x + 60 + W <= innerWidth - 4 ? x + 60 : x - W - 40; // 中间留出被赶走的小 DeepSeek 娘的位置
     return A.walkTo(left, y - H * 0.55, ms);
   };
   /** 走到某个元素旁边（优先站在它左边） */
   A.approach = function (el, ms) {
+    const { w: W, h: H } = DFY.ui.size();
     const r = el.getBoundingClientRect();
     const y = r.top + Math.min(r.height, 120) / 2 - H * 0.55;
     const x = r.left - W - 6 >= 4 ? r.left - W - 6 : Math.min(innerWidth - W - 4, r.right + 6);
@@ -181,9 +183,10 @@
   A.goHome = async function () {
     const m = DFY.ui.mascotEl;
     const p = await DFY.store.get('mascotPos');
-    const x = p && p.x != null ? p.x * innerWidth : innerWidth - 230;
-    const y = p && p.y != null ? p.y * innerHeight : innerHeight - 175;
-    await A.walkTo(x, Math.max(160, y));
+    const home = DFY.ui.homePoint();
+    const x = p && p.x != null ? p.x * innerWidth : home.x;
+    const y = p && p.y != null ? p.y * innerHeight : home.y;
+    await A.walkTo(x, Math.max(DFY.ui.size().h + 7, y));
     m.classList.remove('face-left');
   };
 })();
